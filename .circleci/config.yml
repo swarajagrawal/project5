@@ -27,11 +27,11 @@ jobs:
           command: |
             make setup
       - run:
-          name: make install (via Makefile)
+          name: make install 
           command: |
             make install
       - run:
-          name: make lint (via Makefile)
+          name: make lint
           command: |
             make lint
   build-docker:
