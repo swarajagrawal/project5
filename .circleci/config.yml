@@ -23,7 +23,7 @@ jobs:
 #      - print_pipeline_id
       - checkout
       - run:
-          name: make setup (via Makefile)
+          name: make setup
           command: |
             make setup
       - run:
