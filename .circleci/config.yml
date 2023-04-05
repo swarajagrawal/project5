@@ -1,37 +1,92 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
 version: 2.1
+
+orbs:
+  aws-eks: circleci/aws-eks@2.2.0
+  kubernetes: circleci/kubernetes@1.3
+
+#commands:
+#  print_pipeline_id:
+#    steps:
+#      - run:
+#          name: Print workflow ID
+#          # ${CIRCLE_WORKFLOW_ID:0:7} takes the first 7 chars of a Built-in environment variable
+#          command:
+#            echo ${CIRCLE_WORKFLOW_ID:0:7}
+
+
 jobs:
-  build:
+  setup-environment:
     docker:
       - image: python:3.7.3-stretch
-
-    # working_directory: ~/repo
-
+    working_directory: ~/repo
     steps:
-    - checkout
-    # Download and cache dependencies
-    - restore_cache:
-        key: v1-dependencies-{{ checksum "requirements.txt" }}
-             - v1-dependencies-
+#      - print_pipeline_id
+      - checkout
+      - run:
+          name: make setup (via Makefile)
+          command: |
+            make setup
+      - run:
+          name: make install (via Makefile)
+          command: |
+            make install
+      - run:
+          name: make lint (via Makefile)
+          command: |
+            make lint
+  build-docker:
+    docker:
+      - image: docker:latest
+    working_directory: ~/repo
+    steps:
+      - checkout
+#      - setup_remote_docker
+      - run:
+          name: install dependencies
+          command: |
+            apk update && apk add bash
+      - run:
+          name: build docker (via Dockerfile)
+          command: |
+            sh ./run_docker.sh
+            sh ./upload_docker.sh
+  deploy-eks:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - run: apk add --update tar gzip nodejs npm curl 
+      - run: pip install awscli
+      - run: aws --version
+      - run:
+          name: install aws eks
+          command: |
+            sh ./install_eksctl.sh
+      - run:
+          name: install kubectl
+          command: |
+            sh ./install_kubectl.sh
+      - run:
+          name: create aws eks cluster
+          command: |
+            aws sts get-caller-identity
+            eksctl create cluster --name capstone-eks-cluster-${CIRCLE_WORKFLOW_ID:0:7} --region=us-west-2 --zones us-west-2a,us-west-2b,us-west-2c,us-west-2d
+            eksctl utils describe-stacks --region=us-west-2 --cluster=capstone-eks-cluster-${CIRCLE_WORKFLOW_ID:0:7}
+            eksctl get cluster --name=capstone-eks-cluster-${CIRCLE_WORKFLOW_ID:0:7} --region=us-west-2
+      - run:
+          name: deploy app
+          command: |
+            kubectl get nodes
+            kubectl create deployment capstoneproject --image=105062491232.dkr.ecr.us-west-2.amazonaws.com/capstoneproject:latest &&
+              kubectl expose deployment/capstoneproject --type="LoadBalancer" --port 80
+            kubectl get deployments,rs,svc,pods
 
-    - run:
-        name: install dependencies
-        command: |
-          python3 -m venv venv
-          . venv/bin/activate
-          make install
-          wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 && chmod +x /bin/hadolint
-    - save_cache:
-        paths:
-          - ./venv
-        key: v1-dependencies-{{ checksum "requirements.txt" }}
 
-    # run lint!
-    - run:
-        name: run lint
-        command: |
-          . venv/bin/activate
-          make lint 
+workflows:
+  captone:
+    jobs:
+      - setup-environment
+      - build-docker:
+          requires: [setup-environment]
+      - deploy-eks:
+          requires: [build-docker]
