@@ -50,7 +50,7 @@ jobs:
           name: build docker (via Dockerfile)
           command: |
             sh ./run_docker.sh
-            sh ./upload_docker.sh
+#            sh ./upload_docker.sh
   deploy-eks:
     docker:
       - image: python:3.7-alpine3.11
@@ -89,5 +89,11 @@ workflows:
       - setup-environment
       - build-docker:
           requires: [setup-environment]
-      - deploy-eks:
+      - aws-ecr/build-and-push-image:
+          repo: capstoneproject
+          tag: "latest,v0.1.${CIRCLE_BUILD_NUM}"
+          dockerfile: /Dockerfile
+          path: .
           requires: [build-docker]
+      - deploy-eks:
+          requires: [aws-ecr/build-and-push-image]
