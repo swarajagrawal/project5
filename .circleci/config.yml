@@ -92,7 +92,7 @@ workflows:
       - aws-ecr/build-and-push-image:
           repo: capstoneproject
           tag: "latest,v0.1.${CIRCLE_BUILD_NUM}"
-          dockerfile: /Dockerfile
+          dockerfile: Dockerfile
           path: .
           requires: [build-docker]
       - deploy-eks:
