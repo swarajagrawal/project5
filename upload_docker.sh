@@ -5,7 +5,7 @@
 
 # Step 1:
 # Retrieve an authentication token and authenticate your Docker client to your registry
-dockerpath="swarajagrawal/capstoneproject"
+dockerpath="swarajagrawal87@gmail.com/capstoneproject"
 #aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 105062491232.dkr.ecr.us-west-2.amazonaws.com
 
 # Step 2:  
