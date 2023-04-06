@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## Complete the following steps to get Docker running locally
+## Complete the following steps to get Docker running local
 
 # Build image and add a descriptive tag
 docker build --tag=capstoneproject .
