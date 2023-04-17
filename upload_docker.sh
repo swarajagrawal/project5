@@ -4,7 +4,7 @@
 # Assumes that an image is built via `run_docker.sh`
 
 # Step 1:
-# Retrieve an authentication token and authenticate your Docker client to your registry
+# Retrieve an authentication token and authenticate your Docker client to your registr
 dockerpath="swarajagrawal/myrepo"
 #aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 105062491232.dkr.ecr.us-west-2.amazonaws.com
 
